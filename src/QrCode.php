@@ -856,7 +856,6 @@ class QrCode
             $runColor   = false;
             $runX       = 0;
             $runHistory = [0, 0, 0, 0, 0, 0, 0];
-            $padRun     = $this->size;
             for ($x = 0; $x < $this->size; $x++) {
                 if ($this->modules[$y][$x] == $runColor) {
                     $runX++;
@@ -866,8 +865,7 @@ class QrCode
                         $result++;
                     }
                 } else {
-                    self::finderPenaltyAddHistory($runX + $padRun, $runHistory);
-                    $padRun = 0;
+                    self::finderPenaltyAddHistory($runX, $runHistory);
                     if (!$runColor) {
                         $result += $this->finderPenaltyCountPatterns($runHistory) * self::PENALTY_N3;
                     }
@@ -875,14 +873,13 @@ class QrCode
                     $runX     = 1;
                 }
             }
-            $result += $this->finderPenaltyTerminateAndCount($runColor, $runX + $padRun, $runHistory) * self::PENALTY_N3;
+            $result += $this->finderPenaltyTerminateAndCount($runColor, $runX, $runHistory) * self::PENALTY_N3;
         }
         // Adjacent modules in column having same color, and finder-like patterns
         for ($x = 0; $x < $this->size; $x++) {
             $runColor   = false;
             $runY       = 0;
             $runHistory = [0, 0, 0, 0, 0, 0, 0];
-            $padRun     = $this->size;
             for ($y = 0; $y < $this->size; $y++) {
                 if ($this->modules[$y][$x] == $runColor) {
                     $runY++;
@@ -892,8 +889,7 @@ class QrCode
                         $result++;
                     }
                 } else {
-                    self::finderPenaltyAddHistory($runY + $padRun, $runHistory);
-                    $padRun = 0;
+                    self::finderPenaltyAddHistory($runY, $runHistory);
                     if (!$runColor) {
                         $result += $this->finderPenaltyCountPatterns($runHistory) * self::PENALTY_N3;
                     }
@@ -901,7 +897,7 @@ class QrCode
                     $runY     = 1;
                 }
             }
-            $result += $this->finderPenaltyTerminateAndCount($runColor, $runY + $padRun, $runHistory) * self::PENALTY_N3;
+            $result += $this->finderPenaltyTerminateAndCount($runColor, $runY, $runHistory) * self::PENALTY_N3;
         }
 
         // 2*2 blocks of modules having same color
@@ -942,8 +938,17 @@ class QrCode
      *
      * @throws \Exception
      **/
-    private static function finderPenaltyAddHistory($currentRunLength, $runHistory)
+    private function finderPenaltyAddHistory($currentRunLength, $runHistory)
     {
+        /*
+        if (runHistory[0] == 0)
+				currentRunLength += this.size;  // Add white border to initial run
+                */
+
+        if ($runHistory[0] == 0) {
+            $currentRunLength += $this->size;  // Add white border to initial run
+        }
+
         \array_pop($runHistory);
         \array_unshift($runHistory, $currentRunLength);
     }
